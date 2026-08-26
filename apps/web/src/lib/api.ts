@@ -34,8 +34,10 @@ export async function createBooking(
   if (!response.ok) {
     let message = "Unable to submit booking.";
     try {
-      const data = (await response.json()) as { message?: string };
-      message = data.message ?? message;
+      const data = (await response.json()) as { message?: string | string[] };
+      message = Array.isArray(data.message)
+        ? data.message.join(" ")
+        : (data.message ?? message);
     } catch {
       message = (await response.text()) || message;
     }

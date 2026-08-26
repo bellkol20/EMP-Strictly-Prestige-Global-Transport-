@@ -1,14 +1,19 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { getCompanyName } from '../brand/brand';
-import { buildBookingConfirmationEmail } from './confirmation-email';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  CALENDAR_BLOCKING_STATUSES,
+  getBookingWindow,
+  windowsOverlap,
+} from './booking-schedule';
 
 export type CreateBookingInput = {
   fullName: string;
@@ -19,8 +24,11 @@ export type CreateBookingInput = {
   pickupAddress: string;
   dropoffAddress?: string;
   passengerCount?: number;
+  durationMinutes?: number;
   notes?: string;
 };
+
+const DEFAULT_DURATION_MINUTES = 120;
 
 @Injectable()
 export class BookingService {
@@ -35,6 +43,7 @@ export class BookingService {
     const pickupAddress = input.pickupAddress?.trim();
     const serviceType = input.serviceType?.trim() || 'Chauffeur service';
     const pickupAt = new Date(input.pickupAt);
+    const durationMinutes = input.durationMinutes ?? DEFAULT_DURATION_MINUTES;
 
     if (!fullName || !email || !pickupAddress) {
       throw new BadRequestException('Full name, email, and pickup are required.');
@@ -43,6 +52,14 @@ export class BookingService {
     if (Number.isNaN(pickupAt.getTime())) {
       throw new BadRequestException('Pickup date and time is invalid.');
     }
+
+    if (durationMinutes < 30 || durationMinutes > 720) {
+      throw new BadRequestException(
+        'Trip duration must be between 30 minutes and 12 hours.',
+      );
+    }
+
+    await this.assertNoScheduleOverlap(pickupAt, durationMinutes);
 
     const confirmationCode = this.generateConfirmationCode();
     const companyDisplayName = getCompanyName();
@@ -63,10 +80,11 @@ export class BookingService {
     const booking = await this.prisma.booking.create({
       data: {
         confirmationCode,
-        status: BookingStatus.CONFIRMED,
+        status: BookingStatus.PENDING_APPROVAL,
         customerId: customer.id,
         serviceType,
         pickupAt,
+        durationMinutes,
         pickupAddress,
         dropoffAddress: input.dropoffAddress?.trim() || null,
         passengerCount: input.passengerCount ?? 1,
@@ -76,65 +94,71 @@ export class BookingService {
       include: { customer: true },
     });
 
-    const emailPreview = buildBookingConfirmationEmail({
-      customerName: customer.fullName,
-      confirmationCode: booking.confirmationCode,
-      pickupAt: booking.pickupAt.toISOString(),
-      pickupAddress: booking.pickupAddress,
-      dropoffAddress: booking.dropoffAddress ?? undefined,
-      serviceType: booking.serviceType,
-    });
-
-    const emailResult = await this.emailService.sendBookingConfirmation(
-      customer.email,
-      {
-        customerName: customer.fullName,
-        confirmationCode: booking.confirmationCode,
-        pickupAt: booking.pickupAt.toLocaleString('en-US', {
-          dateStyle: 'full',
-          timeStyle: 'short',
-        }),
-        pickupAddress: booking.pickupAddress,
-        dropoffAddress: booking.dropoffAddress ?? undefined,
-        serviceType: booking.serviceType,
-      },
-    );
-
-    return {
-      confirmationCode: booking.confirmationCode,
-      status: booking.status,
-      companyName: companyDisplayName,
-      pickupAt: booking.pickupAt.toISOString(),
-      pickupAddress: booking.pickupAddress,
-      dropoffAddress: booking.dropoffAddress,
-      serviceType: booking.serviceType,
-      customerEmail: customer.email,
-      emailSent: emailResult.sent,
-      emailPreview,
-    };
+    return this.toPublicBooking(booking);
   }
 
-  async findByConfirmationCode(confirmationCode: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { confirmationCode: confirmationCode.trim().toUpperCase() },
+  async approve(confirmationCode: string) {
+    const booking = await this.findBookingRecord(confirmationCode);
+
+    if (booking.status === BookingStatus.CONFIRMED) {
+      return this.toPublicBooking(booking);
+    }
+
+    if (
+      booking.status === BookingStatus.CANCELLED ||
+      booking.status === BookingStatus.COMPLETED
+    ) {
+      throw new BadRequestException('This booking can no longer be approved.');
+    }
+
+    await this.assertNoScheduleOverlap(
+      booking.pickupAt,
+      booking.durationMinutes,
+      booking.id,
+    );
+
+    const updated = await this.prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: BookingStatus.CONFIRMED },
       include: { customer: true },
     });
 
-    if (!booking) {
-      throw new NotFoundException('Booking not found.');
-    }
+    const emailResult = await this.emailService.sendBookingConfirmation(
+      updated.customer.email,
+      this.toEmailInput(updated),
+    );
 
     return {
-      confirmationCode: booking.confirmationCode,
-      status: booking.status,
-      companyName: booking.companyDisplayName,
-      pickupAt: booking.pickupAt.toISOString(),
-      pickupAddress: booking.pickupAddress,
-      dropoffAddress: booking.dropoffAddress,
-      serviceType: booking.serviceType,
-      customerName: booking.customer.fullName,
-      customerEmail: booking.customer.email,
+      ...this.toPublicBooking(updated),
+      emailSent: emailResult.sent,
     };
+  }
+
+  async deny(confirmationCode: string) {
+    const booking = await this.findBookingRecord(confirmationCode);
+
+    if (booking.status === BookingStatus.CANCELLED) {
+      return this.toPublicBooking(booking);
+    }
+
+    if (booking.status === BookingStatus.CONFIRMED) {
+      throw new BadRequestException(
+        'Confirmed bookings must be cancelled manually, not denied.',
+      );
+    }
+
+    const updated = await this.prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: BookingStatus.CANCELLED },
+      include: { customer: true },
+    });
+
+    return this.toPublicBooking(updated);
+  }
+
+  async findByConfirmationCode(confirmationCode: string) {
+    const booking = await this.findBookingRecord(confirmationCode);
+    return this.toPublicBooking(booking);
   }
 
   async listRecent(limit = 20) {
@@ -144,16 +168,105 @@ export class BookingService {
       include: { customer: true },
     });
 
-    return bookings.map((booking) => ({
+    return bookings.map((booking) => this.toPublicBooking(booking));
+  }
+
+  private async assertNoScheduleOverlap(
+    pickupAt: Date,
+    durationMinutes: number,
+    excludeBookingId?: string,
+  ) {
+    const { start, end } = getBookingWindow(pickupAt, durationMinutes);
+    const searchStart = new Date(start.getTime() - DEFAULT_DURATION_MINUTES * 60_000);
+    const searchEnd = new Date(end.getTime() + DEFAULT_DURATION_MINUTES * 60_000);
+
+    const candidates = await this.prisma.booking.findMany({
+      where: {
+        status: { in: CALENDAR_BLOCKING_STATUSES },
+        pickupAt: { gte: searchStart, lte: searchEnd },
+        ...(excludeBookingId ? { NOT: { id: excludeBookingId } } : {}),
+      },
+    });
+
+    const conflict = candidates.find((existing) => {
+      const existingWindow = getBookingWindow(
+        existing.pickupAt,
+        existing.durationMinutes,
+      );
+      return windowsOverlap(
+        start,
+        end,
+        existingWindow.start,
+        existingWindow.end,
+      );
+    });
+
+    if (conflict) {
+      throw new ConflictException(
+        `That pickup time overlaps an existing reservation (${conflict.confirmationCode}). Please choose another time.`,
+      );
+    }
+  }
+
+  private async findBookingRecord(confirmationCode: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { confirmationCode: confirmationCode.trim().toUpperCase() },
+      include: { customer: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found.');
+    }
+
+    return booking;
+  }
+
+  private toPublicBooking(
+    booking: {
+      confirmationCode: string;
+      status: BookingStatus;
+      companyDisplayName: string;
+      pickupAt: Date;
+      durationMinutes: number;
+      pickupAddress: string;
+      dropoffAddress: string | null;
+      serviceType: string;
+      customer: { fullName: string; email: string };
+    },
+  ) {
+    return {
       confirmationCode: booking.confirmationCode,
       status: booking.status,
       companyName: booking.companyDisplayName,
       pickupAt: booking.pickupAt.toISOString(),
+      durationMinutes: booking.durationMinutes,
       pickupAddress: booking.pickupAddress,
+      dropoffAddress: booking.dropoffAddress,
+      serviceType: booking.serviceType,
       customerName: booking.customer.fullName,
       customerEmail: booking.customer.email,
+    };
+  }
+
+  private toEmailInput(booking: {
+    confirmationCode: string;
+    pickupAt: Date;
+    pickupAddress: string;
+    dropoffAddress: string | null;
+    serviceType: string;
+    customer: { fullName: string };
+  }) {
+    return {
+      customerName: booking.customer.fullName,
+      confirmationCode: booking.confirmationCode,
+      pickupAt: booking.pickupAt.toLocaleString('en-US', {
+        dateStyle: 'full',
+        timeStyle: 'short',
+      }),
+      pickupAddress: booking.pickupAddress,
+      dropoffAddress: booking.dropoffAddress ?? undefined,
       serviceType: booking.serviceType,
-    }));
+    };
   }
 
   private generateConfirmationCode(): string {

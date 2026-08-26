@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminKeyGuard } from '../admin/admin-key.guard';
 import { BookingService, CreateBookingInput } from './booking.service';
 
@@ -15,6 +22,18 @@ export class BookingController {
   @UseGuards(AdminKeyGuard)
   listRecent() {
     return this.bookingService.listRecent();
+  }
+
+  @Post(':confirmationCode/approve')
+  @UseGuards(AdminKeyGuard)
+  approve(@Param('confirmationCode') confirmationCode: string) {
+    return this.bookingService.approve(confirmationCode);
+  }
+
+  @Post(':confirmationCode/deny')
+  @UseGuards(AdminKeyGuard)
+  deny(@Param('confirmationCode') confirmationCode: string) {
+    return this.bookingService.deny(confirmationCode);
   }
 
   @Get(':confirmationCode')

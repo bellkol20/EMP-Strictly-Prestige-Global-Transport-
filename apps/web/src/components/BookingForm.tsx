@@ -165,8 +165,9 @@ export function BookingForm() {
       </button>
 
       <p className="text-sm text-[var(--muted)]">
-        Requests are sent to {siteConfig.name}. Payment via Square is coming
-        next; your reservation is saved immediately.
+        Requests are sent to {siteConfig.name}. A dispatcher reviews each
+        reservation for schedule conflicts before confirming. Confirmation
+        emails are sent after approval.
       </p>
     </form>
   );

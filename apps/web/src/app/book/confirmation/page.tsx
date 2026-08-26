@@ -45,13 +45,16 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
     );
   }
 
-  const copy = bookingConfirmationCopy(booking.confirmationCode);
+  const copy = bookingConfirmationCopy(
+    booking.confirmationCode,
+    booking.status as import("@/lib/booking-copy").BookingStatus,
+  );
   const pickupDate = new Date(booking.pickupAt).toLocaleString();
 
   return (
     <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 md:px-8">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brass)]">
-        Confirmed
+        {copy.eyebrow}
       </p>
       <h1 className="mt-4 font-display text-4xl text-[var(--ink)]">
         {copy.headline}
@@ -59,6 +62,10 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
       <p className="mt-4 text-[var(--muted)]">{copy.body}</p>
 
       <dl className="mt-10 space-y-4 border border-[var(--line)] bg-[var(--surface)] p-6 text-sm">
+        <div>
+          <dt className="text-[var(--muted)]">Status</dt>
+          <dd>{booking.status.replaceAll("_", " ")}</dd>
+        </div>
         <div>
           <dt className="text-[var(--muted)]">Confirmation</dt>
           <dd className="font-display text-2xl text-[var(--ink)]">

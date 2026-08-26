@@ -10,6 +10,7 @@ datasource db {
 
 enum BookingStatus {
   DRAFT
+  PENDING_APPROVAL
   PENDING_PAYMENT
   CONFIRMED
   IN_PROGRESS
@@ -38,6 +39,8 @@ model Booking {
   serviceType     String
   vehicleClass    String?
   pickupAt        DateTime
+  /// Estimated trip length used for overlap detection
+  durationMinutes Int           @default(120)
   pickupAddress   String
   dropoffAddress  String?
   passengerCount  Int           @default(1)

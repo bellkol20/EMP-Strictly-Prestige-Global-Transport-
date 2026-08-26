@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AdminBookingActions } from "@/components/AdminBookingActions";
 import { getServerApiBaseUrl } from "@/lib/api-server";
+import type { BookingStatus } from "@/lib/booking-copy";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -75,12 +77,13 @@ export default async function AdminPage() {
               <th className="px-4 py-3 font-medium">Service</th>
               <th className="px-4 py-3 font-medium">Pickup</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {bookings.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-[var(--muted)]" colSpan={5}>
+                <td className="px-4 py-6 text-[var(--muted)]" colSpan={6}>
                   No bookings yet.
                 </td>
               </tr>
@@ -109,6 +112,12 @@ export default async function AdminPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">{booking.status}</td>
+                  <td className="px-4 py-3">
+                    <AdminBookingActions
+                      confirmationCode={booking.confirmationCode}
+                      status={booking.status as BookingStatus}
+                    />
+                  </td>
                 </tr>
               ))
             )}
