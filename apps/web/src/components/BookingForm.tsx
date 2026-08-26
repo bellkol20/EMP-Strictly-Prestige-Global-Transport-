@@ -166,8 +166,7 @@ export function BookingForm() {
 
       <p className="text-sm text-[var(--muted)]">
         Requests are sent to {siteConfig.name}. A dispatcher reviews each
-        reservation for schedule conflicts before confirming. Confirmation
-        emails are sent after approval.
+        reservation and emails you once the trip is confirmed.
       </p>
     </form>
   );
