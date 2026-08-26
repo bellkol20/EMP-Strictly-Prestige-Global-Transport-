@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchBooking } from "@/lib/api";
+import { fetchBookingServer } from "@/lib/api-server";
 import { bookingConfirmationCopy } from "@/lib/booking-copy";
 import { siteConfig } from "@/lib/site";
 
@@ -28,7 +28,7 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
 
   let booking;
   try {
-    booking = await fetchBooking(code);
+    booking = await fetchBookingServer(code);
   } catch {
     return (
       <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 md:px-8">

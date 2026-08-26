@@ -5,7 +5,37 @@ import { getCompanyName } from './brand/brand';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',').map((v) => v.trim()) ?? true,
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const allowed = (process.env.CORS_ORIGIN ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      if (allowed.length === 0) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowed.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      if (origin.endsWith('.vercel.app')) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     methods: ['GET', 'POST', 'OPTIONS'],
   });
 

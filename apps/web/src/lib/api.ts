@@ -1,9 +1,3 @@
-import { siteConfig } from "@/lib/site";
-
-export function getApiBaseUrl(): string {
-  return siteConfig.apiUrl.replace(/\/$/, "");
-}
-
 export type CreateBookingPayload = {
   fullName: string;
   email: string;
@@ -27,33 +21,25 @@ export type BookingConfirmation = {
   customerEmail: string;
 };
 
+/** Browser calls same-origin proxy — avoids CORS issues with Railway. */
 export async function createBooking(
   payload: CreateBookingPayload,
 ): Promise<BookingConfirmation> {
-  const response = await fetch(`${getApiBaseUrl()}/bookings`, {
+  const response = await fetch("/api/bookings", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Unable to submit booking.");
-  }
-
-  return response.json();
-}
-
-export async function fetchBooking(
-  confirmationCode: string,
-): Promise<BookingConfirmation & { customerName: string }> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/bookings/${encodeURIComponent(confirmationCode)}`,
-    { cache: "no-store" },
-  );
-
-  if (!response.ok) {
-    throw new Error("Booking not found.");
+    let message = "Unable to submit booking.";
+    try {
+      const data = (await response.json()) as { message?: string };
+      message = data.message ?? message;
+    } catch {
+      message = (await response.text()) || message;
+    }
+    throw new Error(message);
   }
 
   return response.json();
