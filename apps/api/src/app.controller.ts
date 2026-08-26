@@ -6,6 +6,11 @@ import { getCompanyName } from './brand/brand';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get('health')
+  getHealthAlias() {
+    return this.appService.getHealth();
+  }
+
   @Get()
   getHealth() {
     return this.appService.getHealth();
