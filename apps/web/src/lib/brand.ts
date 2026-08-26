@@ -1,6 +1,5 @@
 /**
  * Canonical brand identity for EMP Strictly Prestige Global Transport.
- * Keep in sync with apps/web/src/lib/brand.ts
  */
 export const COMPANY_NAME = "EMP Strictly Prestige Global Transport" as const;
 
@@ -16,5 +15,3 @@ export const BRAND = {
   defaultMetaDescription:
     "EMP Strictly Prestige Global Transport provides professional chauffeur service for airport transfers, corporate travel, events, and private aviation worldwide.",
 } as const;
-
-export type Brand = typeof BRAND;

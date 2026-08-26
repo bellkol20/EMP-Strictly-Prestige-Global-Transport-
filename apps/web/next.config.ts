@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@espgt/brand"],
+  /* Web app is self-contained for Vercel deploys from apps/web */
 };
 
 export default nextConfig;
