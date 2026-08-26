@@ -98,7 +98,17 @@ export class BookingService {
     const booking = await this.findBookingRecord(confirmationCode);
 
     if (booking.status === BookingStatus.CONFIRMED) {
-      return this.toPublicBooking(booking);
+      const emailResult = await this.emailService.sendBookingConfirmation(
+        booking.customer.email,
+        this.toEmailInput(booking),
+      );
+      return {
+        ...this.toPublicBooking(booking),
+        emailSent: emailResult.sent,
+        emailReason: emailResult.reason,
+        emailDetail: emailResult.detail,
+        resent: true,
+      };
     }
 
     if (
@@ -122,6 +132,31 @@ export class BookingService {
     return {
       ...this.toPublicBooking(updated),
       emailSent: emailResult.sent,
+      emailReason: emailResult.reason,
+      emailDetail: emailResult.detail,
+    };
+  }
+
+  async resendConfirmation(confirmationCode: string) {
+    const booking = await this.findBookingRecord(confirmationCode);
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException(
+        'Confirmation emails can only be resent for approved bookings.',
+      );
+    }
+
+    const emailResult = await this.emailService.sendBookingConfirmation(
+      booking.customer.email,
+      this.toEmailInput(booking),
+    );
+
+    return {
+      ...this.toPublicBooking(booking),
+      emailSent: emailResult.sent,
+      emailReason: emailResult.reason,
+      emailDetail: emailResult.detail,
+      resent: true,
     };
   }
 

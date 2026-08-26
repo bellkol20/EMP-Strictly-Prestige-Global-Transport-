@@ -16,7 +16,7 @@ export async function POST(_request: Request, { params }: Props) {
     );
   }
 
-  if (action !== "approve" && action !== "deny") {
+  if (action !== "approve" && action !== "deny" && action !== "resend-confirmation") {
     return NextResponse.json({ message: "Unknown action." }, { status: 400 });
   }
 

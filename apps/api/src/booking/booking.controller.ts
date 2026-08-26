@@ -24,6 +24,12 @@ export class BookingController {
     return this.bookingService.listRecent();
   }
 
+  @Post(':confirmationCode/resend-confirmation')
+  @UseGuards(AdminKeyGuard)
+  resendConfirmation(@Param('confirmationCode') confirmationCode: string) {
+    return this.bookingService.resendConfirmation(confirmationCode);
+  }
+
   @Post(':confirmationCode/approve')
   @UseGuards(AdminKeyGuard)
   approve(@Param('confirmationCode') confirmationCode: string) {
