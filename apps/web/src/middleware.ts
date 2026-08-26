@@ -1,28 +1,47 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  ADMIN_COOKIE,
+  getExpectedAdminSessionToken,
+} from "@/lib/admin-session";
 
-export function middleware(request: NextRequest) {
-  const password = process.env.ADMIN_PASSWORD?.trim();
+async function hasValidSession(request: NextRequest): Promise<boolean> {
+  const expected = await getExpectedAdminSessionToken();
+  if (!expected) {
+    return false;
+  }
 
-  if (!password || !request.nextUrl.pathname.startsWith("/admin")) {
+  const session = request.cookies.get(ADMIN_COOKIE)?.value;
+  return session === expected;
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (!pathname.startsWith("/admin")) {
     return NextResponse.next();
   }
 
-  const authorization = request.headers.get("authorization");
-  const expected = `Basic ${Buffer.from(`admin:${password}`).toString("base64")}`;
-
-  if (authorization === expected) {
+  if (pathname === "/admin/login") {
+    if (await hasValidSession(request)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
     return NextResponse.next();
   }
 
-  return new NextResponse("Authentication required.", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="EMP Admin", charset="UTF-8"',
-    },
-  });
+  if (!process.env.ADMIN_PASSWORD?.trim()) {
+    return NextResponse.next();
+  }
+
+  if (await hasValidSession(request)) {
+    return NextResponse.next();
+  }
+
+  const loginUrl = new URL("/admin/login", request.url);
+  loginUrl.searchParams.set("next", pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*"],
 };

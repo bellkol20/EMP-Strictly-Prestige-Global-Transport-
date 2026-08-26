@@ -59,6 +59,11 @@ export default async function AdminPage() {
           Set matching <code className="font-mono">ADMIN_API_KEY</code> on
           Railway and Vercel to load bookings here.
         </p>
+      ) : bookings.length === 0 ? (
+        <p className="mt-8 rounded border border-[var(--line)] bg-[var(--surface)] p-4 text-sm text-[var(--muted)]">
+          No bookings loaded. Confirm <code className="font-mono">ADMIN_API_KEY</code>{" "}
+          matches Railway and redeploy both services.
+        </p>
       ) : null}
 
       <div className="mt-10 overflow-x-auto border border-[var(--line)]">
