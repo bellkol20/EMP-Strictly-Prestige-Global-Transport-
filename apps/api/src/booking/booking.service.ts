@@ -86,6 +86,11 @@ export class BookingService {
       include: { customer: true },
     });
 
+    await this.emailService.sendBookingRequestReceived(
+      booking.customer.email,
+      this.toEmailInput(booking),
+    );
+
     return this.toPublicBooking(booking);
   }
 

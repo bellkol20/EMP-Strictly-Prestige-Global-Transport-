@@ -1,14 +1,35 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { buildBookingConfirmationEmail } from '../booking/confirmation-email';
+import {
+  buildBookingConfirmationEmail,
+  buildBookingRequestReceivedEmail,
+} from '../booking/confirmation-email';
 import type { BookingConfirmationEmailInput } from '../booking/confirmation-email';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
+  async sendBookingRequestReceived(
+    to: string,
+    input: BookingConfirmationEmailInput,
+  ): Promise<{ sent: boolean; reason?: string }> {
+    const { subject, html, text } = buildBookingRequestReceivedEmail(input);
+    return this.send(to, subject, html, text);
+  }
+
   async sendBookingConfirmation(
     to: string,
     input: BookingConfirmationEmailInput,
+  ): Promise<{ sent: boolean; reason?: string }> {
+    const { subject, html, text } = buildBookingConfirmationEmail(input);
+    return this.send(to, subject, html, text);
+  }
+
+  private async send(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
   ): Promise<{ sent: boolean; reason?: string }> {
     const apiKey = process.env.RESEND_API_KEY?.trim();
     const from =
@@ -16,12 +37,8 @@ export class EmailService {
       process.env.SUPPORT_EMAIL?.trim() ??
       'onboarding@resend.dev';
 
-    const { subject, html, text } = buildBookingConfirmationEmail(input);
-
     if (!apiKey) {
-      this.logger.warn(
-        'RESEND_API_KEY not set — skipping customer confirmation email.',
-      );
+      this.logger.warn('RESEND_API_KEY not set — skipping email.');
       return { sent: false, reason: 'email_not_configured' };
     }
 
@@ -49,7 +66,7 @@ export class EmailService {
 
       return { sent: true };
     } catch (error) {
-      this.logger.error('Failed to send confirmation email', error);
+      this.logger.error('Failed to send email', error);
       return { sent: false, reason: 'email_send_failed' };
     }
   }

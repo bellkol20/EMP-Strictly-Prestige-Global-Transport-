@@ -57,6 +57,54 @@ export function buildBookingConfirmationEmail(
   return { subject, text, html };
 }
 
+/** Sent immediately when a customer submits a pending reservation */
+export function buildBookingRequestReceivedEmail(
+  input: BookingConfirmationEmailInput,
+): { subject: string; text: string; html: string } {
+  const company = getCompanyName();
+  const subject = `${company} — we received your reservation request (${input.confirmationCode})`;
+  const dropoff = input.dropoffAddress
+    ? `\nDrop-off: ${input.dropoffAddress}`
+    : '';
+
+  const text = [
+    `Dear ${input.customerName},`,
+    '',
+    `Thank you for contacting ${company}. We received your chauffeur request and our dispatch team is reviewing it now.`,
+    '',
+    `Reference: ${input.confirmationCode}`,
+    `Service: ${input.serviceType}`,
+    `Pickup: ${input.pickupAt}`,
+    `From: ${input.pickupAddress}${dropoff}`,
+    '',
+    `You will receive another email once your trip is confirmed.`,
+    '',
+    company,
+  ].join('\n');
+
+  const html = `
+    <div style="font-family: Georgia, serif; color: #14110e; line-height: 1.5;">
+      <p>Dear ${escapeHtml(input.customerName)},</p>
+      <p>Thank you for contacting <strong>${escapeHtml(company)}</strong>. We received your chauffeur request and our dispatch team is reviewing it now.</p>
+      <p>
+        <strong>Reference:</strong> ${escapeHtml(input.confirmationCode)}<br />
+        <strong>Service:</strong> ${escapeHtml(input.serviceType)}<br />
+        <strong>Pickup:</strong> ${escapeHtml(input.pickupAt)}<br />
+        <strong>From:</strong> ${escapeHtml(input.pickupAddress)}
+        ${
+          input.dropoffAddress
+            ? `<br /><strong>Drop-off:</strong> ${escapeHtml(input.dropoffAddress)}`
+            : ''
+        }
+      </p>
+      <p>You will receive another email once your trip is confirmed.</p>
+      <p>${escapeHtml(company)}</p>
+    </div>
+  `.trim();
+
+  return { subject, text, html };
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
