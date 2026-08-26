@@ -24,6 +24,7 @@ describe('AppController (e2e)', () => {
         expect(res.body.company).toBe(
           'EMP Strictly Prestige Global Transport',
         );
+        expect(res.body).toHaveProperty('database');
       });
   });
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BookingForm } from "@/components/BookingForm";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -17,44 +18,10 @@ export default function BookPage() {
         Book with {siteConfig.name}
       </h1>
       <p className="mt-4 text-[var(--muted)]">
-        Booking flow, Square payment capture, and confirmation emails land
-        next. For now, this page establishes branded reservation entry.
+        Submit your trip details below. You&apos;ll receive a confirmation code
+        instantly while we finalize Square payments and email delivery.
       </p>
-      <form className="mt-10 space-y-5" action="#" method="post">
-        <label className="block text-sm">
-          <span className="text-[var(--ink-soft)]">Full name</span>
-          <input
-            className="mt-2 w-full border border-[var(--line)] bg-white px-4 py-3 outline-none focus:border-[var(--brass)]"
-            name="fullName"
-            autoComplete="name"
-            required
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-[var(--ink-soft)]">Email</span>
-          <input
-            className="mt-2 w-full border border-[var(--line)] bg-white px-4 py-3 outline-none focus:border-[var(--brass)]"
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-[var(--ink-soft)]">Pickup address</span>
-          <input
-            className="mt-2 w-full border border-[var(--line)] bg-white px-4 py-3 outline-none focus:border-[var(--brass)]"
-            name="pickup"
-            required
-          />
-        </label>
-        <button
-          type="submit"
-          className="bg-[var(--brass)] px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink)]"
-        >
-          Request confirmation preview
-        </button>
-      </form>
+      <BookingForm />
       <p className="mt-8 text-sm text-[var(--muted)]">
         Prefer a human dispatcher?{" "}
         <Link className="text-[var(--ink)] underline" href="/contact">

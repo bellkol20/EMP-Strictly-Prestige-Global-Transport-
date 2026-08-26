@@ -19,7 +19,6 @@ export class AppController {
     };
   }
 
-  /** Placeholder admin summary — brand shown in dashboard payloads */
   @Get('admin/overview')
   getAdminOverview() {
     return {
