@@ -1,0 +1,20 @@
+{
+  "name": "emp-strictly-prestige-global-transport",
+  "private": true,
+  "version": "0.1.0",
+  "description": "EMP Strictly Prestige Global Transport — luxury chauffeur booking platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@espgt/web",
+    "dev:api": "npm run start:dev --workspace=@espgt/api",
+    "build:web": "npm run build --workspace=@espgt/web",
+    "build:api": "npm run build --workspace=@espgt/api",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

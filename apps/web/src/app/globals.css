@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #14110e;
+  --ink-soft: #3a342e;
+  --muted: #6f675e;
+  --paper: #f3eee6;
+  --surface: #ebe4d8;
+  --line: rgba(20, 17, 14, 0.12);
+  --brass: #b08d57;
+  --brass-bright: #c9a56a;
+  --night: #0c1218;
+  --night-mid: #16202b;
+  --mist: rgba(243, 238, 230, 0.78);
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes veil {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drift {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.9s ease-out both;
+}
+
+.animate-rise-delay {
+  animation: rise 1s ease-out 0.15s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise 1s ease-out 0.3s both;
+}
+
+.animate-veil {
+  animation: veil 1.2s ease-out both;
+}
+
+.hero-atmosphere {
+  background-image:
+    linear-gradient(120deg, rgba(12, 18, 24, 0.72), rgba(12, 18, 24, 0.38)),
+    radial-gradient(ellipse at 20% 20%, rgba(176, 141, 87, 0.28), transparent 45%),
+    linear-gradient(160deg, #0c1218 0%, #1a2733 45%, #2a1f16 100%);
+  background-size: auto, auto, 200% 200%;
+  animation: drift 18s ease-in-out infinite alternate;
+}

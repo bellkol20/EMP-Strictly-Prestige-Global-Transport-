@@ -1,0 +1,52 @@
+// EMP Strictly Prestige Global Transport — PostgreSQL schema (Railway)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  DRAFT
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  fullName  String
+  phone     String?
+  /// Square customer id for saved payment methods (never store raw cards)
+  squareCustomerId String?
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  confirmationCode String       @unique
+  status          BookingStatus @default(DRAFT)
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  customerId      String
+  serviceType     String
+  vehicleClass    String?
+  pickupAt        DateTime
+  pickupAddress   String
+  dropoffAddress  String?
+  passengerCount  Int           @default(1)
+  notes           String?
+  /// Display company name snapshot for confirmations / emails
+  companyDisplayName String      @default("EMP Strictly Prestige Global Transport")
+  quotedAmountCents Int?
+  currency        String        @default("USD")
+  squarePaymentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
