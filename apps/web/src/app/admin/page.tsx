@@ -1,15 +1,49 @@
+import Link from "next/link";
 import type { Metadata } from "next";
+import { getServerApiBaseUrl } from "@/lib/api-server";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Admin",
   robots: { index: false, follow: false },
-  description: `${siteConfig.name} admin dashboard (scaffold).`,
+  description: `${siteConfig.name} admin dashboard.`,
 };
 
-export default function AdminPage() {
+export type AdminBooking = {
+  confirmationCode: string;
+  status: string;
+  companyName: string;
+  pickupAt: string;
+  pickupAddress: string;
+  customerName: string;
+  customerEmail: string;
+  serviceType: string;
+};
+
+async function loadBookings(): Promise<AdminBooking[]> {
+  const adminKey = process.env.ADMIN_API_KEY?.trim();
+  if (!adminKey) {
+    return [];
+  }
+
+  const response = await fetch(`${getServerApiBaseUrl()}/bookings/recent`, {
+    headers: { "x-admin-key": adminKey },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  return response.json();
+}
+
+export default async function AdminPage() {
+  const bookings = await loadBookings();
+  const adminConfigured = Boolean(process.env.ADMIN_API_KEY?.trim());
+
   return (
-    <div className="mx-auto max-w-4xl px-6 pb-24 pt-32 md:px-8">
+    <div className="mx-auto max-w-6xl px-6 pb-24 pt-32 md:px-8">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brass)]">
         Internal
       </p>
@@ -17,9 +51,65 @@ export default function AdminPage() {
         {siteConfig.name} Admin
       </h1>
       <p className="mt-4 text-[var(--muted)]">
-        Dashboard scaffold. Bookings, customers, fleet, and Square payment
-        status will appear here.
+        Recent reservations from the live booking system.
       </p>
+
+      {!adminConfigured ? (
+        <p className="mt-8 rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          Set matching <code className="font-mono">ADMIN_API_KEY</code> on
+          Railway and Vercel to load bookings here.
+        </p>
+      ) : null}
+
+      <div className="mt-10 overflow-x-auto border border-[var(--line)]">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-[var(--surface)] text-[var(--muted)]">
+            <tr>
+              <th className="px-4 py-3 font-medium">Confirmation</th>
+              <th className="px-4 py-3 font-medium">Guest</th>
+              <th className="px-4 py-3 font-medium">Service</th>
+              <th className="px-4 py-3 font-medium">Pickup</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-[var(--muted)]" colSpan={5}>
+                  No bookings yet.
+                </td>
+              </tr>
+            ) : (
+              bookings.map((booking) => (
+                <tr key={booking.confirmationCode} className="border-t border-[var(--line)]">
+                  <td className="px-4 py-3">
+                    <Link
+                      className="font-mono underline"
+                      href={`/book/confirmation?code=${booking.confirmationCode}`}
+                    >
+                      {booking.confirmationCode}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>{booking.customerName}</div>
+                    <div className="text-[var(--muted)]">
+                      {booking.customerEmail}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">{booking.serviceType}</td>
+                  <td className="px-4 py-3">
+                    <div>{new Date(booking.pickupAt).toLocaleString()}</div>
+                    <div className="text-[var(--muted)]">
+                      {booking.pickupAddress}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">{booking.status}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

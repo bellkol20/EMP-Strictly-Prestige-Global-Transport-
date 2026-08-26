@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { AdminKeyGuard } from '../admin/admin-key.guard';
 import { BookingService, CreateBookingInput } from './booking.service';
 
 @Controller('bookings')
@@ -11,6 +12,7 @@ export class BookingController {
   }
 
   @Get('recent')
+  @UseGuards(AdminKeyGuard)
   listRecent() {
     return this.bookingService.listRecent();
   }

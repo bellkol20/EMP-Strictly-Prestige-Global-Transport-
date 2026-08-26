@@ -7,6 +7,7 @@ import { BookingStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { getCompanyName } from '../brand/brand';
 import { buildBookingConfirmationEmail } from './confirmation-email';
+import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type CreateBookingInput = {
@@ -23,7 +24,10 @@ export type CreateBookingInput = {
 
 @Injectable()
 export class BookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async create(input: CreateBookingInput) {
     const fullName = input.fullName?.trim();
@@ -81,6 +85,21 @@ export class BookingService {
       serviceType: booking.serviceType,
     });
 
+    const emailResult = await this.emailService.sendBookingConfirmation(
+      customer.email,
+      {
+        customerName: customer.fullName,
+        confirmationCode: booking.confirmationCode,
+        pickupAt: booking.pickupAt.toLocaleString('en-US', {
+          dateStyle: 'full',
+          timeStyle: 'short',
+        }),
+        pickupAddress: booking.pickupAddress,
+        dropoffAddress: booking.dropoffAddress ?? undefined,
+        serviceType: booking.serviceType,
+      },
+    );
+
     return {
       confirmationCode: booking.confirmationCode,
       status: booking.status,
@@ -90,6 +109,7 @@ export class BookingService {
       dropoffAddress: booking.dropoffAddress,
       serviceType: booking.serviceType,
       customerEmail: customer.email,
+      emailSent: emailResult.sent,
       emailPreview,
     };
   }
