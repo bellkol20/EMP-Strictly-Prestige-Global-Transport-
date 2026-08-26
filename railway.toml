@@ -1,3 +1,4 @@
+# Railway deploys the NestJS API from this monorepo (website stays on Vercel).
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
