@@ -86,11 +86,39 @@ body {
   animation: veil 1.2s ease-out both;
 }
 
-.hero-atmosphere {
+.hero-atmosphere,
+.page-hero {
+  background-color: var(--night);
+  background-image: url("/images/hero-background.png");
+  background-size: cover;
+  background-position: center 22%;
+  background-repeat: no-repeat;
+}
+
+.hero-atmosphere::before,
+.page-hero-overlay {
   background-image:
-    linear-gradient(120deg, rgba(12, 18, 24, 0.72), rgba(12, 18, 24, 0.38)),
-    radial-gradient(ellipse at 20% 20%, rgba(176, 141, 87, 0.28), transparent 45%),
-    linear-gradient(160deg, #0c1218 0%, #1a2733 45%, #2a1f16 100%);
-  background-size: auto, auto, 200% 200%;
-  animation: drift 18s ease-in-out infinite alternate;
+    linear-gradient(
+      180deg,
+      rgba(12, 18, 24, 0.72) 0%,
+      rgba(12, 18, 24, 0.48) 45%,
+      rgba(12, 18, 24, 0.82) 100%
+    ),
+    linear-gradient(
+      120deg,
+      rgba(12, 18, 24, 0.55) 0%,
+      rgba(12, 18, 24, 0.2) 55%,
+      rgba(12, 18, 24, 0.65) 100%
+    );
+}
+
+.hero-atmosphere::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-atmosphere {
+  animation: none;
 }

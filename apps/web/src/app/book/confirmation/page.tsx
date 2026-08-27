@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHero } from "@/components/PageHero";
 import { fetchBookingServer } from "@/lib/api-server";
 import { bookingConfirmationCopy } from "@/lib/booking-copy";
 import { siteConfig } from "@/lib/site";
@@ -12,17 +13,17 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
 
   if (!code) {
     return (
-      <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 md:px-8">
-        <h1 className="font-display text-4xl text-[var(--ink)]">
-          Confirmation
-        </h1>
-        <p className="mt-4 text-[var(--muted)]">
-          No confirmation code was provided.
-        </p>
-        <Link className="mt-6 inline-block underline" href="/book">
-          Return to booking
-        </Link>
-      </div>
+      <>
+        <PageHero
+          title="Confirmation"
+          description="No confirmation code was provided."
+        />
+        <div className="mx-auto max-w-2xl px-6 pb-24 md:px-8">
+          <Link className="inline-block underline" href="/book">
+            Return to booking
+          </Link>
+        </div>
+      </>
     );
   }
 
@@ -31,17 +32,17 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
     booking = await fetchBookingServer(code);
   } catch {
     return (
-      <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 md:px-8">
-        <h1 className="font-display text-4xl text-[var(--ink)]">
-          Booking not found
-        </h1>
-        <p className="mt-4 text-[var(--muted)]">
-          We couldn&apos;t find confirmation code {code}.
-        </p>
-        <Link className="mt-6 inline-block underline" href="/book">
-          Start a new booking
-        </Link>
-      </div>
+      <>
+        <PageHero
+          title="Booking not found"
+          description={`We couldn't find confirmation code ${code}.`}
+        />
+        <div className="mx-auto max-w-2xl px-6 pb-24 md:px-8">
+          <Link className="inline-block underline" href="/book">
+            Start a new booking
+          </Link>
+        </div>
+      </>
     );
   }
 
@@ -52,16 +53,14 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
   const pickupDate = new Date(booking.pickupAt).toLocaleString();
 
   return (
-    <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 md:px-8">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brass)]">
-        {copy.eyebrow}
-      </p>
-      <h1 className="mt-4 font-display text-4xl text-[var(--ink)]">
-        {copy.headline}
-      </h1>
-      <p className="mt-4 text-[var(--muted)]">{copy.body}</p>
-
-      <dl className="mt-10 space-y-4 border border-[var(--line)] bg-[var(--surface)] p-6 text-sm">
+    <>
+      <PageHero
+        eyebrow={copy.eyebrow}
+        title={copy.headline}
+        description={copy.body}
+      />
+      <div className="mx-auto max-w-2xl px-6 pb-24 md:px-8">
+        <dl className="space-y-4 border border-[var(--line)] bg-[var(--surface)] p-6 text-sm">
         <div>
           <dt className="text-[var(--muted)]">Status</dt>
           <dd>{booking.status.replaceAll("_", " ")}</dd>
@@ -103,6 +102,7 @@ export default async function BookingConfirmationPage({ searchParams }: Props) {
         </a>
         .
       </p>
-    </div>
+      </div>
+    </>
   );
 }

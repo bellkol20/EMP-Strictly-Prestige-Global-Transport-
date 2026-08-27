@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHero } from "@/components/PageHero";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -14,27 +15,26 @@ const fleet = [
 
 export default function FleetPage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 pb-24 pt-32 md:px-8">
-      <h1 className="font-display text-4xl text-[var(--ink)] md:text-5xl">
-        Fleet
-      </h1>
-      <p className="mt-4 max-w-2xl text-[var(--muted)]">
-        Vehicle classes for {siteConfig.name}. Detailed model pages and
-        imagery come next.
-      </p>
-      <div className="mt-12 grid gap-6">
-        {fleet.map((vehicle) => (
-          <article
-            key={vehicle.name}
-            className="border border-[var(--line)] bg-[var(--surface)] px-6 py-8"
-          >
-            <h2 className="font-display text-2xl text-[var(--ink)]">
-              {vehicle.name}
-            </h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">{vehicle.capacity}</p>
-          </article>
-        ))}
+    <>
+      <PageHero
+        title="Fleet"
+        description={`Vehicle classes for ${siteConfig.name}. Detailed model pages and imagery come next.`}
+      />
+      <div className="mx-auto max-w-4xl px-6 pb-24 md:px-8">
+        <div className="grid gap-6">
+          {fleet.map((vehicle) => (
+            <article
+              key={vehicle.name}
+              className="border border-[var(--line)] bg-[var(--surface)] px-6 py-8"
+            >
+              <h2 className="font-display text-2xl text-[var(--ink)]">
+                {vehicle.name}
+              </h2>
+              <p className="mt-2 text-sm text-[var(--muted)]">{vehicle.capacity}</p>
+            </article>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

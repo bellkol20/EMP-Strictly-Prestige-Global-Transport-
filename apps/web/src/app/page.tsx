@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <>
       <section className="hero-atmosphere relative min-h-[100svh] overflow-hidden text-[var(--mist)]">
-        <div className="absolute inset-0 animate-veil bg-[radial-gradient(circle_at_80%_20%,rgba(243,238,230,0.08),transparent_35%)]" />
+        <div className="absolute inset-0 animate-veil bg-[radial-gradient(circle_at_80%_20%,rgba(243,238,230,0.06),transparent_35%)]" />
         <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-6 pb-16 pt-28 md:justify-center md:px-8 md:pb-24 md:pt-24">
           <p className="animate-rise font-display text-4xl leading-[0.95] tracking-[-0.02em] text-[var(--paper)] sm:text-5xl md:max-w-3xl md:text-7xl">
             {siteConfig.name}
