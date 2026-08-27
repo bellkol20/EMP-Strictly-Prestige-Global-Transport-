@@ -52,8 +52,12 @@ export function AdminBookingActions({ confirmationCode, status }: Props) {
             `Booking updated, but the confirmation email did not send (${data.emailReason ?? "unknown"}). Check Railway logs and spam folder.`,
           );
         }
+      } else if (data.emailSent) {
+        setNotice("Booking declined and notification email sent.");
       } else {
-        setNotice("Booking declined.");
+        setError(
+          `Booking declined, but the notification email did not send (${data.emailReason ?? "unknown"}). Check Railway logs and spam folder.`,
+        );
       }
 
       router.refresh();

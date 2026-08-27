@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   buildBookingConfirmationEmail,
+  buildBookingDenialEmail,
   buildBookingRequestReceivedEmail,
 } from '../booking/confirmation-email';
 import type { BookingConfirmationEmailInput } from '../booking/confirmation-email';
@@ -28,6 +29,14 @@ export class EmailService {
     input: BookingConfirmationEmailInput,
   ): Promise<EmailSendResult> {
     const { subject, html, text } = buildBookingConfirmationEmail(input);
+    return this.send(to, subject, html, text);
+  }
+
+  async sendBookingDenial(
+    to: string,
+    input: BookingConfirmationEmailInput,
+  ): Promise<EmailSendResult> {
+    const { subject, html, text } = buildBookingDenialEmail(input);
     return this.send(to, subject, html, text);
   }
 

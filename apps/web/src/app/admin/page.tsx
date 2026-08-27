@@ -17,6 +17,7 @@ export type AdminBooking = {
   companyName: string;
   pickupAt: string;
   pickupAddress: string;
+  dropoffAddress: string | null;
   customerName: string;
   customerEmail: string;
   serviceType: string;
@@ -75,7 +76,7 @@ export default async function AdminPage() {
               <th className="px-4 py-3 font-medium">Confirmation</th>
               <th className="px-4 py-3 font-medium">Guest</th>
               <th className="px-4 py-3 font-medium">Service</th>
-              <th className="px-4 py-3 font-medium">Pickup</th>
+              <th className="px-4 py-3 font-medium">Trip</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
@@ -107,9 +108,16 @@ export default async function AdminPage() {
                   <td className="px-4 py-3">{booking.serviceType}</td>
                   <td className="px-4 py-3">
                     <div>{new Date(booking.pickupAt).toLocaleString()}</div>
-                    <div className="text-[var(--muted)]">
+                    <div className="mt-1 text-[var(--muted)]">
+                      <span className="text-[var(--ink-soft)]">From:</span>{" "}
                       {booking.pickupAddress}
                     </div>
+                    {booking.dropoffAddress ? (
+                      <div className="mt-1 text-[var(--muted)]">
+                        <span className="text-[var(--ink-soft)]">To:</span>{" "}
+                        {booking.dropoffAddress}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3">{booking.status}</td>
                   <td className="px-4 py-3">

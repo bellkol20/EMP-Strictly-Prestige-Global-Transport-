@@ -164,7 +164,17 @@ export class BookingService {
     const booking = await this.findBookingRecord(confirmationCode);
 
     if (booking.status === BookingStatus.CANCELLED) {
-      return this.toPublicBooking(booking);
+      const emailResult = await this.emailService.sendBookingDenial(
+        booking.customer.email,
+        this.toEmailInput(booking),
+      );
+      return {
+        ...this.toPublicBooking(booking),
+        emailSent: emailResult.sent,
+        emailReason: emailResult.reason,
+        emailDetail: emailResult.detail,
+        resent: true,
+      };
     }
 
     if (booking.status === BookingStatus.CONFIRMED) {
@@ -179,7 +189,17 @@ export class BookingService {
       include: { customer: true },
     });
 
-    return this.toPublicBooking(updated);
+    const emailResult = await this.emailService.sendBookingDenial(
+      updated.customer.email,
+      this.toEmailInput(updated),
+    );
+
+    return {
+      ...this.toPublicBooking(updated),
+      emailSent: emailResult.sent,
+      emailReason: emailResult.reason,
+      emailDetail: emailResult.detail,
+    };
   }
 
   async findByConfirmationCode(confirmationCode: string) {
